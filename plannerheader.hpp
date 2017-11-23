@@ -9,7 +9,11 @@ using namespace std;
 
 // Helper Function Prototypes
 float get_euclidian_distance(Node*, Node*);
+double deg2rad(double);
+double rad2deg(double);
+void wrap_to_pi(double*);
 
+// Structures
 struct Node{
 	int node_id;
 	float x;
@@ -23,6 +27,7 @@ struct Node{
 	std::list<Node*> children;
 };
 
+// Classes
 class Tree{
 private:
 	list<Node> Vertices;

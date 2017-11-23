@@ -45,7 +45,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	if (nrhs != 3) {
 		mexErrMsgIdAndTxt( "MATLAB:planner:invalidNumInputs",
 			"Three input arguments required.");
-	} else if (nlhs != 1) {
+	} else if (nlhs != 2) {
 		mexErrMsgIdAndTxt( "MATLAB:planner:maxlhs",
 			"One output argument required.");
 	}
@@ -110,6 +110,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		plan_out[2] = robotposeTheta;
 
 	}
+
 	PLANLENGTH_OUT = mxCreateNumericMatrix( (mwSize)1, (mwSize)1, mxINT8_CLASS, mxREAL); 
 	int* planlength_out = (int *)mxGetPr(PLANLENGTH_OUT);
 	*planlength_out = planlength;
