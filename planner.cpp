@@ -35,6 +35,32 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	float robotposeTheta, float goalposeX, float goalposeY, float*** plan, int* planlength)
 {
 
+	Node Start, Goal;
+
+	Start.x = 5;
+	Start.y = 10;
+	Start.vx = 10;
+	Start.vy = 10;
+
+	Goal.x = 20;
+	Goal.y = 15;
+	Goal.vx = 0;
+	Goal.vy = 0;
+
+	Tree RRT_Star(&Start, &Goal);
+
+	SystemDI double_integrator;
+
+	float opt_time = 0;
+
+	bool check = double_integrator.optimal_arrival_time(RRT_Star.Start_Node, RRT_Star.Goal_Node, &opt_time);
+
+	mexPrintf("Optimal Arrival Time: %f\n", opt_time);
+
+	float cost = double_integrator.cost_of_path(RRT_Star.Start_Node, RRT_Star.Goal_Node, opt_time);
+
+	mexPrintf("Cost of Path: %f\n", cost);
+
 	return;
 }
 

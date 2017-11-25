@@ -3,7 +3,13 @@ clear all
 close all
 
 %% Initial and Final States
-X_initial = [0;0;10;10];
+syms x1 x2 x3 x4 y1 y2 y3 y4 real
+% syms r real
+
+% X_initial = [x1;x2;x3;x4];
+% X_final = [y1;y2;y3;y4];
+
+X_initial = [5;10;10;10];
 X_final = [20;15;0;0];
 
 %% Linear Double Integrator System
@@ -16,9 +22,10 @@ R_inverse = eye(2)/R;
 time_out = 20;
 
 %% Linear Double Integrator System
-syms t expA(t) expAt(t)
+syms t tau real 
+syms expA(t) expAt(t)
 syms G(t) x_bar(t) td
-syms tau d(tau) dCost(tau) Cost(tau)
+syms d(tau) dCost(tau) Cost(tau)
 syms y(t) u(t) expAdash(t) traj(t)
 
 expA(t) = eye(4) + A*t; % Exponential of At
@@ -33,14 +40,15 @@ x_bar(t) = expA(t)*X_initial + x_bar_term;
 
 %% Computing Optimal Arrival Time of the Trajectory
 
-% Cost(tau) = tau + (X_final-x_bar(tau))'*inv(G(tau))*(X_final-x_bar(tau));
+Cost(tau) = tau + (X_final-x_bar(tau))'*inv(G(tau))*(X_final-x_bar(tau));
 
 d(tau) = eye(4)/G(tau)*(X_final-x_bar(tau));
+
 dCost(tau) = 1 - 2*(A*X_final + c)'*d(tau) - d(tau)'*B*R_inverse*B'*d(tau);
 
 Tau_roots = double(vpasolve(dCost == 0,[0 time_out]));
 t_star = Tau_roots(Tau_roots>0 & (abs(imag(Tau_roots))<1e-9))
-
+double(Cost(t_star))
 % if (isempty(t_star))
 %    t_star = double(vpasolve(dCost == 0));
 % end
@@ -70,7 +78,7 @@ traj(t) = expAdash(t-t_star)*[X_final;d(t_star)]; % + integral = 0 for double in
 
 figure
 grid on
-axis([-5 25 -5 25])
+axis([-5 35 -5 35])
 hold on
 time = 0:0.05:t_star;
 for i = 1:length(time)
