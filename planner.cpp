@@ -47,19 +47,8 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	Goal.vx = 0;
 	Goal.vy = 0;
 
-	Tree RRT_Star(&Start, &Goal);
-
-	SystemDI double_integrator;
-
-	float opt_time = 0;
-
-	bool check = double_integrator.optimal_arrival_time(RRT_Star.Start_Node, RRT_Star.Goal_Node, &opt_time);
-
-	mexPrintf("Optimal Arrival Time: %f\n", opt_time);
-
-	float cost = double_integrator.cost_of_path(RRT_Star.Start_Node, RRT_Star.Goal_Node, opt_time);
-
-	mexPrintf("Cost of Path: %f\n", cost);
+	Tree RRT_Star(&Start, &Goal, map, x_size, y_size);
+	RRT_Star.expand_tree();
 
 	return;
 }
