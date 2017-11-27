@@ -101,9 +101,10 @@ void Tree::expand_tree(){
 	generate_sample_Node();
 	Node* best_parent = NULL;
 	float best_node_cost = 10000.0; 
-	float cur_edge_cost, cur_node_cost, best_time;
+	float cur_edge_cost, cur_node_cost, best_time, best_edge_cost;
 	float opt_time = 0;
 	bool root_check;
+	Edge child_edge;
 
 	// First Rewiring Starts
 	compute_euclidean_neighbors(&Sample_Node);
@@ -111,11 +112,12 @@ void Tree::expand_tree(){
 		root_check = optimal_arrival_time(*it, &Sample_Node, &opt_time);
 		if(root_check){
 			cur_edge_cost = cost_of_path(*it, &Sample_Node, opt_time);
-			if (cur_edge_cost < MAX_COST){
+			if (cur_edge_cost < MAX_EDGE_COST){
 				cur_node_cost = (*it)->cost + cur_edge_cost;
 				if (cur_node_cost < best_node_cost){
 					if(compute_trajectory(*it, &Sample_Node, opt_time)){
-						best_node_cost = cur_node_cost; 
+						best_node_cost = cur_node_cost;
+						best_edge_cost = cur_edge_cost; 
 						best_parent = (*it);
 						best_time = opt_time;
 					}
@@ -131,15 +133,45 @@ void Tree::expand_tree(){
 		Sample_Node.cost = best_node_cost;
 		Sample_Node.parent = best_parent;
 
-		Vertices.push_back(Sample_Node);
+		// Add child info here
+		child_edge.edge_cost = best_edge_cost;
+		child_edge.optimal_time = best_time;
 
-		sample_node_address = &Vertices.back();
-
-		add_trajectory(best_parent, sample_node_address, best_time, best_node_cost);
+		//Vertices.push_back(Sample_Node);
+		//sample_node_address = &Vertices.back();
+		//add_trajectory(best_parent, sample_node_address, best_time, best_node_cost);
+	}
+	else{
+		return;
 	}
 
 	// Second Rewiring Starts
+	for(list<Node*>::iterator it = Euclidean_Neighbors.begin();it != Euclidean_Neighbors.end(); it++){
+		if((*it)->node_id != best_parent->node_id){
+			root_check = optimal_arrival_time(&Sample_Node, *it, &opt_time);
+			if(root_check){
+				cur_edge_cost = cost_of_path(&Sample_Node, *it, opt_time);
+				if (cur_edge_cost < MAX_EDGE_COST){
+					if (Sample_Node.cost + cur_edge_cost < (*it)->cost){
+						if(compute_trajectory(*it, &Sample_Node, opt_time)){
+						// Do rewiring stuff here
+						}
+					}
+				}
+			}
+		}
+	}
 
+	// Repeat the same for goal node
+
+
+	// Add the sample to the tree
+	Vertices.push_back(Sample_Node);
+
+	// Add child's address here and add it to the list of children
+	child_edge.child = &Vertices.back();
+	best_parent->children.push_back(child_edge);
+	
 	return;
 }
 
@@ -253,7 +285,7 @@ bool Tree::optimal_arrival_time(Node* Start, Node* Goal, float* opt_time){
 	y4 = Goal->vy;
 
 	float t_init = 0.001;
-	float t_final = 100;
+	float t_final = T_MAX;
 	float error = 0.001;
 
 	float fun_init, fun_mid, fun_final;
@@ -339,19 +371,19 @@ void Tree::add_trajectory(Node* Start, Node* Goal, float t_star, float edge_cost
 	Point2D temp_point;
 
 	// Creating the edge
-	Edge temp_edge;
-	temp_edge.parent = Start;
-	temp_edge.child = Goal;
-	temp_edge.edge_cost = edge_cost;
+	//Edge temp_edge;
+	// temp_edge.parent = Start;
+	// temp_edge.child = Goal;
+	// temp_edge.edge_cost = edge_cost;
 
 	while(t < t_star){
 		temp_point.x = y1 + y3*(t - t_star) - (((4*r*(x3 - y3))/t_star - (6*r*(x1 - y1 + t_star*x3))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x3 - y3))/pow(t_star,2) - (12*r*(x1 - y1 + t_star*x3))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
 		temp_point.y = y2 + y4*(t - t_star) - (((4*r*(x4 - y4))/t_star - (6*r*(x2 - y2 + t_star*x4))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x4 - y4))/pow(t_star,2) - (12*r*(x2 - y2 + t_star*x4))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
-		temp_edge.trajectory.push_back(temp_point);
+		//temp_edge.trajectory.push_back(temp_point);
 		t += t_delta;
 	}
 
 	// Adding the edge as a child of Start
-	Start->children.push_back(temp_edge);
+	//Start->children.push_back(temp_edge);
 	return;
 }

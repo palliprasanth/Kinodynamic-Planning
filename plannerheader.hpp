@@ -21,11 +21,10 @@ struct Point2D{
 	float y;
 };	
 
-struct Edge{
-	Node* parent;	
+struct Edge{	
 	Node* child;
 	float edge_cost;
-	list<Point2D> trajectory;
+	float optimal_time;
 };
 
 struct Node{
