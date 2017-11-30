@@ -7,6 +7,7 @@
 #include "mex.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctime>
 #include "plannerheader.hpp"
 #include "constants.hpp"
 
@@ -36,6 +37,12 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 {
 
 	std::uniform_real_distribution<float> uni_distribution(0.0,1.0);
+
+	std::clock_t start;
+	double duration;
+	start = std::clock();
+
+	double planning_cycle = 1.0; //1 sec
 
 	Node Start, Goal;
 
@@ -73,7 +80,28 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 		RRT_Star.expand_tree(uni_distribution);
 	}
 
-	//RRT_Star.print_tree();
+	RRT_Star.print_node(RRT_Star.get_Goal());
+
+	// for(int k=0; k<20; k++){
+	// 	for(int i=0;i<100;i++){
+	// 		RRT_Star.expand_tree(uni_distribution);
+	// 	}
+	// 	mexPrintf("Tree Size is %d\n",RRT_Star.get_tree_size());
+	// 	mexPrintf("Goal Cost is %f\n",Goal_Node->cost);
+	// }
+	
+	// RRT_Star.print_node(RRT_Star.get_Goal());
+
+	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+	while(duration < planning_cycle){
+		RRT_Star.expand_tree(uni_distribution);
+		duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+	}
+	
+	RRT_Star.print_node(RRT_Star.get_Goal());
+
+	// duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+	// mexPrintf("Time: %f\n",duration );
 
 	Node* Parent_Node = Goal_Node->parent;
 	Path.push_front(Goal_Node);
@@ -81,18 +109,6 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 		Path.push_front(Parent_Node);
 		Parent_Node = Parent_Node->parent;
 	}
-
-	RRT_Star.print_node(RRT_Star.get_Goal());
-
-	for(int k=0; k<10; k++){
-		for(int i=0;i<100;i++){
-			RRT_Star.expand_tree(uni_distribution);
-		}
-		mexPrintf("Tree Size is %d\n",RRT_Star.get_tree_size());
-	}
-	
-
-	RRT_Star.print_node(RRT_Star.get_Goal());
 
 	int path_size = Path.size();
 
