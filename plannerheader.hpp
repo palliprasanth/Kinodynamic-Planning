@@ -47,7 +47,7 @@ struct Node{
 class Tree{
 private:
 	list<Node> Vertices;
-	bool reached;
+	// bool reached;
 	Node* Start_Node;
 	Node Goal_Node;
 
@@ -76,6 +76,7 @@ public:
 	// Accesor Methods
 	Node* get_Start();
 	Node* get_Goal();
+	int get_tree_size();
 
 	// Other Methods
 	void generate_sample_Node(std::uniform_real_distribution<float>);

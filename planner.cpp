@@ -54,15 +54,15 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	// Goal.vx = 0;
 	// Goal.vy = 0;
 
-	// Goal.x = 20;
-	// Goal.y = 31;
-	// Goal.vx = 0;
-	// Goal.vy = 0;
-
-    Goal.x = 42;
-	Goal.y = 39;
+	Goal.x = 20;
+	Goal.y = 31;
 	Goal.vx = 0;
 	Goal.vy = 0;
+
+ //    Goal.x = 42;
+	// Goal.y = 39;
+	// Goal.vx = 0;
+	// Goal.vy = 0;
 
 	list<Node*> Path;
 
@@ -84,13 +84,19 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 
 	RRT_Star.print_node(RRT_Star.get_Goal());
 
-	// for(int i=0;i<500;i++){
-	// 	RRT_Star.expand_tree(uni_distribution);
-	// }
+	for(int k=0; k<10; k++){
+		for(int i=0;i<100;i++){
+			RRT_Star.expand_tree(uni_distribution);
+		}
+		mexPrintf("Tree Size is %d\n",RRT_Star.get_tree_size());
+	}
+	
 
-	// RRT_Star.print_node(RRT_Star.get_Goal());
+	RRT_Star.print_node(RRT_Star.get_Goal());
 
 	int path_size = Path.size();
+
+	mexPrintf("Tree Size is %d\n",RRT_Star.get_tree_size());
 
 	mexPrintf("Path Size is %d\n",path_size);
 

@@ -10,8 +10,9 @@
 #define GAMMA 100
 
 #define MAX_RAD 20 // Distance threshold for controller generation in meters
-#define MAX_EDGE_COST 50 //Max cost threshold for an edge
-#define T_MAX 50 // Max time for bisection root finding
+#define MAX_EDGE_COST 30 //Max cost threshold for an edge
+#define T_MAX 30 // Max time for bisection root finding
+#define T_DIFF 0.05 // Time Difference for trajectory computation
 
 // State Space Limits
 #define X_MIN 0

@@ -8,7 +8,7 @@ RES = 0.1;
 
 % Parameters
 r = 0.25;
-t_delta = 0.1;
+t_delta = 0.05;
 
 %draw the environment
 image(envmap'*255);

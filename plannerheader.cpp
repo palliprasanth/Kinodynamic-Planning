@@ -48,7 +48,7 @@ Tree::Tree(Node* Start, Node* Goal, double* input_map, int xsize, int ysize){
 	Goal_Node.cost = 10000.0;
 	Goal_Node.parent = NULL;
 
-	reached = false;
+	// reached = false;
 
 	// System Properties Initializing
 	r = 0.25;
@@ -69,6 +69,10 @@ Node* Tree::get_Start(){
 
 Node* Tree::get_Goal(){
 	return &Goal_Node;
+}
+
+int Tree::get_tree_size(){
+	return Vertices.size();
 }
 
 void Tree::generate_sample_Node(std::uniform_real_distribution<float> uni_distribution){
@@ -369,15 +373,15 @@ bool Tree::compute_trajectory(Node* Start, Node* Goal, float t_star){
 	y3 = Goal->vx; 
 	y4 = Goal->vy;
 
-	float t_delta = 0.05;
+	float t_delta = T_DIFF;
 	float t = t_delta;
 
 	Point2D temp_point;
 
     // Add Collision Check here, If collision happens break it
 	while(t < t_star){
-		temp_point.x = y1 + y3*(t - t_star) - (((4*r*(x3 - y3))/t_star - (6*r*(x1 - y1 + t_star*x3))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x3 - y3))/pow(t_star,2) - (12*r*(x1 - y1 + t_star*x3))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
-		temp_point.y = y2 + y4*(t - t_star) - (((4*r*(x4 - y4))/t_star - (6*r*(x2 - y2 + t_star*x4))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x4 - y4))/pow(t_star,2) - (12*r*(x2 - y2 + t_star*x4))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
+		temp_point.x = (2*pow(t,3)*x1 + pow(t_star,3)*x1 - 2*pow(t,3)*y1 - 3*pow(t,2)*t_star*x1 + t*pow(t_star,3)*x3 + pow(t,3)*t_star*x3 + 3*pow(t,2)*t_star*y1 + pow(t,3)*t_star*y3 - 2*pow(t,2)*pow(t_star,2)*x3 - pow(t,2)*pow(t_star,2)*y3)/pow(t_star,3);
+		temp_point.y = (2*pow(t,3)*x2 + pow(t_star,3)*x2 - 2*pow(t,3)*y2 - 3*pow(t,2)*t_star*x2 + t*pow(t_star,3)*x4 + pow(t,3)*t_star*x4 + 3*pow(t,2)*t_star*y2 + pow(t,3)*t_star*y4 - 2*pow(t,2)*pow(t_star,2)*x4 - pow(t,2)*pow(t_star,2)*y4)/pow(t_star,3);
 		if(!is_valid_Node(&temp_point)){
 			return false;
 		}
