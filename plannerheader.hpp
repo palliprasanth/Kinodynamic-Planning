@@ -2,6 +2,7 @@
 #define PLANNER_HEADER_H
 
 #include <list>
+#include <random>
 
 typedef struct Point2D Point2D;
 typedef struct Edge Edge;
@@ -24,7 +25,6 @@ struct Point2D{
 struct Edge{	
 	Node* child;
 	float edge_cost;
-	float optimal_time;
 };
 
 struct Node{
@@ -39,6 +39,7 @@ struct Node{
 	// float time;
 	float cost;
 	Node* parent;
+	float optimal_time;
 	std::list<Edge> children;
 };
 
@@ -60,6 +61,11 @@ private:
 	//System Parameters
 	float r;
 
+	//Sampling Parameters
+	unsigned seed;
+	std::default_random_engine generator;
+	
+
 public:
 	// Constructors
 	Tree(Node*, Node*, double*, int, int);
@@ -72,13 +78,14 @@ public:
 	Node* get_Goal();
 
 	// Other Methods
-	void generate_sample_Node();
+	void generate_sample_Node(std::uniform_real_distribution<float>);
 	void compute_euclidean_neighbors(Node*);
-	void expand_tree();
+	void expand_tree(std::uniform_real_distribution<float>);
 	bool is_valid_Node(Node*);
 	bool is_valid_Node(Point2D*);
 	float get_neighbourhood_distance();
 	void propagate_costs(Node*);
+	void delete_child(Node*);
 	void print_node(Node*);
 	void print_tree();
 
@@ -86,7 +93,6 @@ public:
 	float cost_of_path(Node*, Node*, float);
 	float diff_cost_of_path(float, float, float, float, float, float, float, float, float);
 	bool compute_trajectory(Node*, Node*, float);
-	void add_trajectory(Node*, Node*, float, float);
 	bool optimal_arrival_time(Node*, Node*, float*);
 };
 

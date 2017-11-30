@@ -45,13 +45,18 @@ Tree::Tree(Node* Start, Node* Goal, double* input_map, int xsize, int ysize){
 	Goal_Node.y = Goal->y;
 	Goal_Node.vx = Goal->vx;
 	Goal_Node.vy = Goal->vy;
-	Goal_Node.cost = 0;
+	Goal_Node.cost = 10000.0;
 	Goal_Node.parent = NULL;
 
 	reached = false;
 
 	// System Properties Initializing
 	r = 0.25;
+
+	// Sampling properties
+	seed = std::chrono::system_clock::now().time_since_epoch().count();
+	generator.seed(seed);
+	//uni_distribution.min(0);
 }
 
 Tree::~Tree(){
@@ -66,10 +71,8 @@ Node* Tree::get_Goal(){
 	return &Goal_Node;
 }
 
-void Tree::generate_sample_Node(){
-	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-	std::default_random_engine generator(seed);
-	std::uniform_real_distribution<double> uni_distribution(0.0,1.0);
+void Tree::generate_sample_Node(std::uniform_real_distribution<float> uni_distribution){
+
 
 	bool valid_sample = false;
 
@@ -81,7 +84,7 @@ void Tree::generate_sample_Node(){
 
 		valid_sample = is_valid_Node(&Sample_Node);
 	}
-
+	//mexPrintf("Sample Node Generated\n");
 	//mexPrintf("%f, %f, %f, %f\n",Sample_Node.x,Sample_Node.y,Sample_Node.vx,Sample_Node.vy);
 	return;
 }
@@ -97,17 +100,21 @@ void Tree::compute_euclidean_neighbors(Node* Cur_Node){
 	return;
 }
 
-void Tree::expand_tree(){
-	generate_sample_Node();
+void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution){
+	//mexPrintf("Expanding Tree\n");
+	generate_sample_Node(uni_distribution);
 	Node* best_parent = NULL;
 	float best_node_cost = 10000.0; 
 	float cur_edge_cost, cur_node_cost, best_time, best_edge_cost;
 	float opt_time = 0;
 	bool root_check;
 	Edge child_edge;
+	Node* sample_node_address;
 
 	// First Rewiring Starts
 	compute_euclidean_neighbors(&Sample_Node);
+
+	//mexPrintf("Number of neighbors: %d\n", Euclidean_Neighbors.size());
 	for(list<Node*>::iterator it = Euclidean_Neighbors.begin();it != Euclidean_Neighbors.end(); it++){
 		root_check = optimal_arrival_time(*it, &Sample_Node, &opt_time);
 		if(root_check){
@@ -127,19 +134,18 @@ void Tree::expand_tree(){
 	}
 
 	if (best_parent != NULL){
-		Node* sample_node_address;
-
 		Sample_Node.node_id = Vertices.size()+1;
 		Sample_Node.cost = best_node_cost;
 		Sample_Node.parent = best_parent;
+		Sample_Node.optimal_time = best_time;
+		Vertices.push_back(Sample_Node);
+		sample_node_address = &Vertices.back();
 
 		// Add child info here
 		child_edge.edge_cost = best_edge_cost;
-		child_edge.optimal_time = best_time;
+		child_edge.child = sample_node_address;
 
-		//Vertices.push_back(Sample_Node);
-		//sample_node_address = &Vertices.back();
-		//add_trajectory(best_parent, sample_node_address, best_time, best_node_cost);
+		best_parent->children.push_back(child_edge);
 	}
 	else{
 		return;
@@ -153,8 +159,14 @@ void Tree::expand_tree(){
 				cur_edge_cost = cost_of_path(&Sample_Node, *it, opt_time);
 				if (cur_edge_cost < MAX_EDGE_COST){
 					if (Sample_Node.cost + cur_edge_cost < (*it)->cost){
-						if(compute_trajectory(*it, &Sample_Node, opt_time)){
-						// Do rewiring stuff here
+						if(compute_trajectory(&Sample_Node, *it, opt_time)){
+							// Do rewiring stuff here
+							// Delete current node from the list of children of its parent
+							delete_child(*it);
+							(*it)->cost = Sample_Node.cost + cur_edge_cost;
+							(*it)->parent = sample_node_address;
+							(*it)->optimal_time = opt_time;
+							propagate_costs(*it);
 						}
 					}
 				}
@@ -162,22 +174,34 @@ void Tree::expand_tree(){
 		}
 	}
 
-	// Repeat the same for goal node
-
-
-	// Add the sample to the tree
-	Vertices.push_back(Sample_Node);
-
-	// Add child's address here and add it to the list of children
-	child_edge.child = &Vertices.back();
-	best_parent->children.push_back(child_edge);
+	// Repeat the same for goal node	
+	root_check = optimal_arrival_time(&Sample_Node, &Goal_Node, &opt_time);
+	if(root_check){
+		//mexPrintf("Root Check Goal\n");
+		cur_edge_cost = cost_of_path(&Sample_Node, &Goal_Node, opt_time);
+		//mexPrintf("Edge Cost: %f\n", cur_edge_cost);
+		if (cur_edge_cost < MAX_EDGE_COST){
+			if (Sample_Node.cost + cur_edge_cost < Goal_Node.cost){
+				if(compute_trajectory(&Sample_Node, &Goal_Node, opt_time)){
+					// Do rewiring stuff here
+					// Delete current node from the list of children of its parent
+					//mexPrintf("Goal Connected\n");
+					delete_child(&Goal_Node);
+					Goal_Node.cost = Sample_Node.cost + cur_edge_cost;
+					Goal_Node.parent = sample_node_address;
+					Goal_Node.optimal_time = opt_time;
+					propagate_costs(&Goal_Node);
+				}
+			}
+		}
+	}
 	
 	return;
 }
 
 bool Tree::is_valid_Node(Node* Cur_Node){
-	int gridposx = (int)(Cur_Node->x / RES + 0.5);
-	int gridposy = (int)(Cur_Node->y / RES + 0.5);
+	int gridposx = (int)(Cur_Node->x / RES);
+	int gridposy = (int)(Cur_Node->y / RES);
 
 	if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
 		return false;
@@ -189,8 +213,8 @@ bool Tree::is_valid_Node(Node* Cur_Node){
 }
 
 bool Tree::is_valid_Node(Point2D* Cur_Point){
-	int gridposx = (int)(Cur_Point->x / RES + 0.5);
-	int gridposy = (int)(Cur_Point->y / RES + 0.5);
+	int gridposx = (int)(Cur_Point->x / RES);
+	int gridposy = (int)(Cur_Point->y / RES);
 
 	if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
 		return false;
@@ -208,24 +232,33 @@ float Tree::get_neighbourhood_distance(){
 	return distance;
 }
 
-void Tree::propagate_costs(Node* Parent_node){
-	// int num_of_children = Parent_node->children.size();
-	
-	// if (num_of_children == 0)
-	// 	return;
-	
+void Tree::propagate_costs(Node* Parent_Node){	
 	float distance;
-	for (list<Edge>::iterator it = Parent_node->children.begin(); it != Parent_node->children.end(); it++){
+	for (list<Edge>::iterator it = Parent_Node->children.begin(); it != Parent_Node->children.end(); it++){
 		distance = it->edge_cost;
-		(*it).child->cost = Parent_node->cost + distance;
+		(*it).child->cost = Parent_Node->cost + distance;
 		this->propagate_costs((*it).child);
+	}
+	return;
+}
+
+void Tree::delete_child(Node* Child_Node){
+	Node* parent = Child_Node->parent;
+	if (parent != NULL ){
+		for (list<Edge>::iterator it = parent->children.begin(); it != parent->children.end(); it++){
+			if (it->child->node_id == Child_Node->node_id){
+				parent->children.erase(it);
+			}
+		}
 	}
 	return;
 }
 
 void Tree::print_node(Node* Cur_Node){
 	mexPrintf("node_id = %d\n",Cur_Node->node_id);
-	mexPrintf("parent_id = %d\n",Cur_Node->parent->node_id);
+	if (Cur_Node->parent != NULL){
+		mexPrintf("parent_id = %d\n",Cur_Node->parent->node_id);
+	}
 	mexPrintf("Cost = %f\n",Cur_Node->cost);
 	mexPrintf("Number of children: %d\n",Cur_Node->children.size());
 	mexPrintf("x = %f\n",Cur_Node->x);
@@ -240,6 +273,7 @@ void Tree::print_tree(){
 	for (list<Node>::iterator it = Vertices.begin(); it != Vertices.end(); it++){
 		print_node(&(*it));
 	}
+	print_node(&Goal_Node);
 }
 
 float Tree::cost_of_path(Node* Start, Node* Goal, float tau){
@@ -350,40 +384,4 @@ bool Tree::compute_trajectory(Node* Start, Node* Goal, float t_star){
 		t += t_delta;
 	}
 	return true;	
-}
-
-void Tree::add_trajectory(Node* Start, Node* Goal, float t_star, float edge_cost){
-	float x1,x2,x3,x4,y1,y2,y3,y4;
-
-	x1 = Start->x; 
-	x2 = Start->y;
-	x3 = Start->vx; 
-	x4 = Start->vy;
-
-	y1 = Goal->x; 
-	y2 = Goal->y;
-	y3 = Goal->vx; 
-	y4 = Goal->vy;
-
-	float t_delta = 0.05;
-	float t = t_delta;
-
-	Point2D temp_point;
-
-	// Creating the edge
-	//Edge temp_edge;
-	// temp_edge.parent = Start;
-	// temp_edge.child = Goal;
-	// temp_edge.edge_cost = edge_cost;
-
-	while(t < t_star){
-		temp_point.x = y1 + y3*(t - t_star) - (((4*r*(x3 - y3))/t_star - (6*r*(x1 - y1 + t_star*x3))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x3 - y3))/pow(t_star,2) - (12*r*(x1 - y1 + t_star*x3))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
-		temp_point.y = y2 + y4*(t - t_star) - (((4*r*(x4 - y4))/t_star - (6*r*(x2 - y2 + t_star*x4))/pow(t_star,2))*pow(t - t_star,2))/(2*r) - (((6*r*(x4 - y4))/pow(t_star,2) - (12*r*(x2 - y2 + t_star*x4))/pow(t_star,3))*pow(t - t_star,3))/(6*r);
-		//temp_edge.trajectory.push_back(temp_point);
-		t += t_delta;
-	}
-
-	// Adding the edge as a child of Start
-	//Start->children.push_back(temp_edge);
-	return;
 }

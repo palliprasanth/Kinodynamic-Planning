@@ -35,20 +35,79 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	float robotposeTheta, float goalposeX, float goalposeY, float*** plan, int* planlength)
 {
 
+	std::uniform_real_distribution<float> uni_distribution(0.0,1.0);
+
 	Node Start, Goal;
 
-	Start.x = 5;
-	Start.y = 10;
-	Start.vx = 10;
-	Start.vy = 10;
+	Start.x = 1;
+	Start.y = 1;
+	Start.vx = 0;
+	Start.vy = 0;
 
-	Goal.x = 20;
-	Goal.y = 15;
+	// Goal.x = 25;
+	// Goal.y = 10;
+	// Goal.vx = 0;
+	// Goal.vy = 0;
+
+	// Goal.x = 10;
+	// Goal.y = 25;
+	// Goal.vx = 0;
+	// Goal.vy = 0;
+
+	// Goal.x = 20;
+	// Goal.y = 31;
+	// Goal.vx = 0;
+	// Goal.vy = 0;
+
+    Goal.x = 42;
+	Goal.y = 39;
 	Goal.vx = 0;
 	Goal.vy = 0;
 
+	list<Node*> Path;
+
 	Tree RRT_Star(&Start, &Goal, map, x_size, y_size);
-	RRT_Star.expand_tree();
+	Node* Goal_Node = RRT_Star.get_Goal();
+
+	while (Goal_Node->parent == NULL){
+		RRT_Star.expand_tree(uni_distribution);
+	}
+
+	//RRT_Star.print_tree();
+
+	Node* Parent_Node = Goal_Node->parent;
+	Path.push_front(Goal_Node);
+	while(Parent_Node != NULL){
+		Path.push_front(Parent_Node);
+		Parent_Node = Parent_Node->parent;
+	}
+
+	RRT_Star.print_node(RRT_Star.get_Goal());
+
+	// for(int i=0;i<500;i++){
+	// 	RRT_Star.expand_tree(uni_distribution);
+	// }
+
+	// RRT_Star.print_node(RRT_Star.get_Goal());
+
+	int path_size = Path.size();
+
+	mexPrintf("Path Size is %d\n",path_size);
+
+	*plan = (float**) malloc(path_size*sizeof(float*));
+
+	int p = 0;
+	for (list<Node*>::iterator it = Path.begin(); it != Path.end(); it++){
+		(*plan)[p] = (float*) malloc(3*sizeof(float)); 
+		(*plan)[p][0] = (*it)->x;
+		(*plan)[p][1] = (*it)->y;
+		(*plan)[p][2] = (*it)->vx;
+		(*plan)[p][3] = (*it)->vy;
+		(*plan)[p][4] = (*it)->optimal_time;
+		p++;
+	}    
+
+	*planlength = path_size;
 
 	return;
 }
@@ -103,7 +162,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	/* Create return values */
 	if(planlength > 0)
 	{
-		PLAN_OUT = mxCreateNumericMatrix( (mwSize)planlength, 3, mxDOUBLE_CLASS, mxREAL); 
+		PLAN_OUT = mxCreateNumericMatrix( (mwSize)planlength, 5, mxDOUBLE_CLASS, mxREAL); 
 		double* plan_out = mxGetPr(PLAN_OUT);        
         //copy the values
 		int i;
@@ -112,17 +171,20 @@ void mexFunction(int nlhs, mxArray *plhs[],
 			plan_out[0*planlength + i] = plan[i][0];
 			plan_out[1*planlength + i] = plan[i][1];
 			plan_out[2*planlength + i] = plan[i][2];
-
+			plan_out[3*planlength + i] = plan[i][3];
+			plan_out[4*planlength + i] = plan[i][4];
 		}
 	}
 	else
 	{
-		PLAN_OUT = mxCreateNumericMatrix( (mwSize)1, 3, mxDOUBLE_CLASS, mxREAL); 
+		PLAN_OUT = mxCreateNumericMatrix( (mwSize)1, 5, mxDOUBLE_CLASS, mxREAL); 
 		double* plan_out = mxGetPr(PLAN_OUT);
         //copy the values     
 		plan_out[0] = robotposeX;
 		plan_out[1] = robotposeY;
 		plan_out[2] = robotposeTheta;
+		plan_out[3] = robotposeTheta;
+		plan_out[4] = robotposeTheta;
 
 	}
 
