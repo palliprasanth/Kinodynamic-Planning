@@ -105,7 +105,7 @@ void Tree::compute_euclidean_neighbors(Node* Cur_Node){
 	return;
 }
 
-void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, kdTree kdTr){
+void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, kdTreeNode* kdTrRoot){
 	//mexPrintf("Expanding Tree\n");
 	generate_sample_Node(uni_distribution);
 	Node* best_parent = NULL;
@@ -118,12 +118,12 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 
 	// First Rewiring Starts
 	//compute_euclidean_neighbors(&Sample_Node);
-    kdTr.kdTreeNeighbours.clear(); 
-    kdTr.nearestNeighbours(kdTr.root, &Sample_Node, 0);
+    list<Node*> kdTreeNeighbours; 
+    nearestNeighbours(kdTrRoot, &Sample_Node, 0, &kdTreeNeighbours);
     
 
 	//mexPrintf("Number of neighbors: %d\n", Euclidean_Neighbors.size());
-	for(list<Node*>::iterator it = kdTr.kdTreeNeighbours.begin();it != kdTr.kdTreeNeighbours.end(); it++){
+	for(list<Node*>::iterator it = kdTreeNeighbours.begin();it != kdTreeNeighbours.end(); it++){
 		root_check = optimal_arrival_time(*it, &Sample_Node, &opt_time);
 		if(root_check){
 			cur_edge_cost = cost_of_path(*it, &Sample_Node, opt_time);
@@ -148,7 +148,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 		Sample_Node.optimal_time = best_time;
 		Vertices.push_back(Sample_Node);
 		sample_node_address = &Vertices.back();
-        kdTr.insertKDTree(kdTr.root, &Sample_Node,0); //insert the new node into the kdTree
+        insertKDTree(kdTrRoot, &Sample_Node,0); //insert the new node into the kdTree
 		// Add child info here
 		child_edge.edge_cost = best_edge_cost;
 		child_edge.child = sample_node_address;
@@ -160,7 +160,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 	}
 
 	// Second Rewiring Starts
-	for(list<Node*>::iterator it = kdTr.kdTreeNeighbours.begin();it != kdTr.kdTreeNeighbours.end(); it++){
+	for(list<Node*>::iterator it = kdTreeNeighbours.begin();it != kdTreeNeighbours.end(); it++){
 		if((*it)->node_id != best_parent->node_id){
 			root_check = optimal_arrival_time(&Sample_Node, *it, &opt_time);
 			if(root_check){

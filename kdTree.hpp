@@ -4,6 +4,8 @@
 #include <list>
 #include "plannerheader2.hpp"
 
+#define DIM 2
+
 typedef struct Node Node;
 typedef struct kdTreeNode kdTreeNode;
 
@@ -17,27 +19,13 @@ struct kdTreeNode{
     kdTreeNode* right;
 };
 
-class kdTree{    
-private:
+
+kdTreeNode* createKDTreeNode(Node* );
+kdTreeNode* insertKDTree(kdTreeNode* , Node*, unsigned int);
+void nearestNeighbours(kdTreeNode* ,Node* ,int,std::list<Node*>* );
+float getEuclidDist( Node*);
+void printNode(kdTreeNode*);
     
-    int dim;
-    
-    
-public:
-    //constructor
-    kdTree();
-    
-    //Deconstructor
-    ~kdTree();
-    
-    //Methods
-    kdTreeNode* createKDTreeNode(Node* );
-    void insertKDTree(kdTreeNode* , Node*, unsigned int);
-    void nearestNeighbours(kdTreeNode* ,Node* ,int );
-    float getEuclidDist( Node*);
-    std::list<Node*> kdTreeNeighbours;
-    kdTreeNode* root;
-    
-};
+
 
 #endif

@@ -82,7 +82,7 @@ public:
 	// Other Methods
 	void generate_sample_Node(std::uniform_real_distribution<float>);
 	void compute_euclidean_neighbors(Node*);
-	void expand_tree(std::uniform_real_distribution<float>, kdTree);
+	void expand_tree(std::uniform_real_distribution<float>, kdTreeNode*);
 	bool is_valid_Node(Node*);
 	bool is_valid_Node(Point2D*);
 	float get_neighbourhood_distance();

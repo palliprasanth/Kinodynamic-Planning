@@ -1,81 +1,89 @@
 #include <list>
+#include "mex.h"
 #include "plannerheader2.hpp"
 #include <math.h>
 #include "constants.hpp"
 
 using namespace std;
 
-kdTreeNode* kdTree::createKDTreeNode(Node* newNode){
+void printNode(kdTreeNode* n){
+    if(n==NULL)
+        mexPrintf("Node is NULL \n"); 
+    else{
+        mexPrintf("X=%f , Y=%f , leftNode=%x, rightNode=%x \n", (n->point)[0], (n->point)[1], n->left, n->right); 
+    }
+    return; 
+}
+
+kdTreeNode* createKDTreeNode(Node* newNode){
+    
+  //mexPrintf("New node to be inserted X = %f, Y= %f \n", newNode->x, newNode->y); 
   kdTreeNode* tmp = new kdTreeNode;
   
   tmp->data = newNode;
-  tmp->point[0] = newNode->x;
-  tmp->point[1] = newNode->y; 
+  (tmp->point)[0] = newNode->x;
+  (tmp->point)[1] = newNode->y; 
   tmp->left = NULL;
   tmp->right = NULL;
+  //mexPrintf("printing new kdTree node to be inserted \n"); 
+  ///printNode(tmp); 
   return tmp; 
 }
 
-void kdTree::insertKDTree(kdTreeNode* root,  Node* newNode, unsigned int depth){
+kdTreeNode* insertKDTree(kdTreeNode* r,  Node* newNode, unsigned int depth){
 
   float newPoint[2];
   newPoint[0] = newNode->x;
   newPoint[1] = newNode->y; 
   
-  //kdTree is empty 
-  if(root==NULL){
-    root = createKDTreeNode(newNode);
+  
+  if(r==NULL){
+    mexPrintf("NULL \n"); 
+    r = createKDTreeNode(newNode);
+    return r;
   }
 
-  int currDim = depth % dim;
+  int currDim = depth % DIM;
   
-  if(newPoint[currDim] < root->point[currDim]){
-    insertKDTree(root->left, newNode, depth+1);
+  if(newPoint[currDim] < r->point[currDim]){
+    r->left = insertKDTree(r->left, newNode, depth+1);
   }
   else{
-    insertKDTree(root->right, newNode, depth+1);
+    r->right = insertKDTree(r->right, newNode, depth+1);
   }
 
-  return;
+  return r;
 }
 
-float kdTree::getEuclidDist( Node* testPt){
+float getEuclidDist(kdTreeNode* root,  Node* testPt){
 
   return pow(pow(root->point[0] - testPt->x,2.0) + pow(root->point[1] - testPt->y,2.0),0.5);
 }
 
-void kdTree::nearestNeighbours( kdTreeNode* root, Node* testPt, int currDim){
+void nearestNeighbours( kdTreeNode* r, Node* testPt, int currDim, std::list<Node*>* neighbours){
   //Note before run this, make sure and clear the nearest neighbour list in the class
 
   float newPoint[2];
   newPoint[0] = testPt->x;
   newPoint[1] = testPt->y;
   
-  if(root==NULL)
+  if(r==NULL)
     return; 
 
-  float dist = getEuclidDist(testPt);
-  float dimDist = root->point[currDim] - newPoint[currDim];
+  float dist = getEuclidDist(r, testPt);
+  float dimDist = r->point[currDim] - newPoint[currDim];
 
   if(dist < MAX_RAD)
-    kdTreeNeighbours.push_back(root->data); 
+    (*neighbours).push_back(r->data); 
 
-  currDim = (currDim+1) % dim;
+  currDim = (currDim+1) % DIM;
 
-  nearestNeighbours(dimDist > 0 ? root->left : root->right, testPt, currDim);
+  nearestNeighbours(dimDist > 0 ? r->left : r->right, testPt, currDim, neighbours);
   
   if(dimDist >= MAX_RAD)
     return;
 
-  nearestNeighbours(dimDist > 0 ? root->right : root->left, testPt, currDim);
+  nearestNeighbours(dimDist > 0 ? r->right : r->left, testPt, currDim, neighbours);
 }
 
-kdTree::kdTree(){
 
-  dim=2; 
-  root = NULL;
-}
-
-kdTree::~kdTree(){
-  
-}
