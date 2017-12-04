@@ -105,7 +105,7 @@ void Tree::compute_euclidean_neighbors(Node* Cur_Node){
 	return;
 }
 
-void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, kdTreeNode* kdTrRoot){
+void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, kdTreeNode** kdTrRoot){
 	//mexPrintf("Expanding Tree\n");
 	generate_sample_Node(uni_distribution);
 	Node* best_parent = NULL;
@@ -119,7 +119,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 	// First Rewiring Starts
 	//compute_euclidean_neighbors(&Sample_Node);
     list<Node*> kdTreeNeighbours; 
-    nearestNeighbours(kdTrRoot, &Sample_Node, 0, &kdTreeNeighbours);
+    nearestNeighbours(*kdTrRoot, &Sample_Node, 0, &kdTreeNeighbours);
     
 
 	//mexPrintf("Number of neighbors: %d\n", Euclidean_Neighbors.size());
@@ -148,7 +148,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 		Sample_Node.optimal_time = best_time;
 		Vertices.push_back(Sample_Node);
 		sample_node_address = &Vertices.back();
-        insertKDTree(kdTrRoot, &Sample_Node,0); //insert the new node into the kdTree
+        *kdTrRoot = insertKDTree(*kdTrRoot, &Sample_Node,0); //insert the new node into the kdTree
 		// Add child info here
 		child_edge.edge_cost = best_edge_cost;
 		child_edge.child = sample_node_address;

@@ -75,14 +75,14 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	list<Node*> Path;
     
     kdTreeNode*  kdTrRoot = NULL; 
-    insertKDTree(kdTrRoot, &Start, 0); 
-    insertKDTree(kdTrRoot, &Goal, 0); 
+    kdTrRoot = insertKDTree(kdTrRoot, &Start, 0); 
+    kdTrRoot = insertKDTree(kdTrRoot, &Goal, 0); 
 
 	Tree RRT_Star(&Start, &Goal, map, x_size, y_size);
 	Node* Goal_Node = RRT_Star.get_Goal();
 
 	while (Goal_Node->parent == NULL){
-		RRT_Star.expand_tree(uni_distribution, kdTrRoot);
+		RRT_Star.expand_tree(uni_distribution, &kdTrRoot);
 	}
 
 	RRT_Star.print_node(RRT_Star.get_Goal());
@@ -99,7 +99,7 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 
 	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	while(duration < planning_cycle){
-		RRT_Star.expand_tree(uni_distribution, kdTrRoot);
+		RRT_Star.expand_tree(uni_distribution, &kdTrRoot);
 		duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	}
 	
