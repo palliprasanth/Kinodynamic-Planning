@@ -50,6 +50,7 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	Start.y = 1;
 	Start.vx = 0;
 	Start.vy = 0;
+	Start.time = 0;
 
 	// Goal.x = 25;
 	// Goal.y = 10;
@@ -61,10 +62,11 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	// Goal.vx = 0;
 	// Goal.vy = 0;
 
-	Goal.x = 20;
-	Goal.y = 31;
+	Goal.x = 45;
+	Goal.y = 45;
 	Goal.vx = 0;
 	Goal.vy = 0;
+	Goal.time = 0;
 
  //    Goal.x = 42;
 	// Goal.y = 39;

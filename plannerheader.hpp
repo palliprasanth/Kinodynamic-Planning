@@ -33,10 +33,7 @@ struct Node{
 	float y;
 	float vx;
 	float vy;
-	//float theta;
-	// float velocity;
-	// float curvature;
-	// float time;
+	float time;
 	float cost;
 	Node* parent;
 	float optimal_time;

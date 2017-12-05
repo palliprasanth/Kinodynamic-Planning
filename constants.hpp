@@ -9,7 +9,7 @@
 #define VOL_HYPER 4.935 //Volume of unit hyperball in 4D space
 #define GAMMA 100
 
-#define MAX_RAD 10 // Distance threshold for controller generation in meters
+#define MAX_RAD 10//10 // Distance threshold for controller generation in meters
 #define MAX_EDGE_COST 10 //Max cost threshold for an edge
 #define T_MAX 7 // Max time for bisection root finding
 #define T_DIFF 0.05 // Time Difference for trajectory computation

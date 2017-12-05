@@ -1,6 +1,11 @@
 function [] = runtest(mapfile, robotstart, targetstart)
 
+if (mapfile == 'map2.txt')
 envmap = load(mapfile);
+envmap = imresize(envmap,10);
+else
+   envmap = load(mapfile); 
+end
 
 close all;
 

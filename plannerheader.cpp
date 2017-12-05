@@ -33,6 +33,7 @@ Tree::Tree(Node* Start, Node* Goal, double* input_map, int xsize, int ysize){
 	temp.y = Start->y;
 	temp.vx = Start->vx;
 	temp.vy = Start->vy;
+	temp.time = Start->time;
 	temp.cost = 0;
 	temp.parent = NULL;
 
@@ -45,6 +46,7 @@ Tree::Tree(Node* Start, Node* Goal, double* input_map, int xsize, int ysize){
 	Goal_Node.y = Goal->y;
 	Goal_Node.vx = Goal->vx;
 	Goal_Node.vy = Goal->vy;
+	Goal_Node.time = Goal->time;
 	Goal_Node.cost = 10000.0;
 	Goal_Node.parent = NULL;
 
@@ -140,6 +142,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution){
 	if (best_parent != NULL){
 		Sample_Node.node_id = Vertices.size()+1;
 		Sample_Node.cost = best_node_cost;
+		Sample_Node.time = best_parent->time + best_time;
 		Sample_Node.parent = best_parent;
 		Sample_Node.optimal_time = best_time;
 		Vertices.push_back(Sample_Node);
@@ -168,6 +171,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution){
 							// Delete current node from the list of children of its parent
 							delete_child(*it);
 							(*it)->cost = Sample_Node.cost + cur_edge_cost;
+							(*it)->time = Sample_Node.time + opt_time;
 							(*it)->parent = sample_node_address;
 							(*it)->optimal_time = opt_time;
 							propagate_costs(*it);
@@ -192,6 +196,7 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution){
 					//mexPrintf("Goal Connected\n");
 					delete_child(&Goal_Node);
 					Goal_Node.cost = Sample_Node.cost + cur_edge_cost;
+					Goal_Node.time = Sample_Node.time + opt_time;
 					Goal_Node.parent = sample_node_address;
 					Goal_Node.optimal_time = opt_time;
 					propagate_costs(&Goal_Node);
@@ -210,9 +215,10 @@ bool Tree::is_valid_Node(Node* Cur_Node){
 	if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
 		return false;
 	}
-	if ((int)grid_map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
+	if (grid_map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
 		return false;
 	}
+
 	return true;
 }
 
@@ -223,7 +229,7 @@ bool Tree::is_valid_Node(Point2D* Cur_Point){
 	if (gridposx < 1 || gridposx > x_size || gridposy < 1 || gridposy > y_size){
 		return false;
 	}
-	if ((int)grid_map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
+	if (grid_map[GETMAPINDEX(gridposx, gridposy, x_size, y_size)] != 0){
 		return false;
 	}
 	return true;
@@ -241,6 +247,7 @@ void Tree::propagate_costs(Node* Parent_Node){
 	for (list<Edge>::iterator it = Parent_Node->children.begin(); it != Parent_Node->children.end(); it++){
 		distance = it->edge_cost;
 		(*it).child->cost = Parent_Node->cost + distance;
+		(*it).child->time = Parent_Node->time + (*it).child->optimal_time;
 		this->propagate_costs((*it).child);
 	}
 	return;
@@ -264,6 +271,7 @@ void Tree::print_node(Node* Cur_Node){
 		mexPrintf("parent_id = %d\n",Cur_Node->parent->node_id);
 	}
 	mexPrintf("Cost = %f\n",Cur_Node->cost);
+	mexPrintf("Time = %f\n", Cur_Node->time);
 	mexPrintf("Number of children: %d\n",Cur_Node->children.size());
 	mexPrintf("x = %f\n",Cur_Node->x);
 	mexPrintf("y = %f\n",Cur_Node->y);
@@ -376,13 +384,14 @@ bool Tree::compute_trajectory(Node* Start, Node* Goal, float t_star){
 	float t_delta = T_DIFF;
 	float t = t_delta;
 
-	Point2D temp_point;
+	Node temp_node;
 
     // Add Collision Check here, If collision happens break it
 	while(t < t_star){
-		temp_point.x = (2*pow(t,3)*x1 + pow(t_star,3)*x1 - 2*pow(t,3)*y1 - 3*pow(t,2)*t_star*x1 + t*pow(t_star,3)*x3 + pow(t,3)*t_star*x3 + 3*pow(t,2)*t_star*y1 + pow(t,3)*t_star*y3 - 2*pow(t,2)*pow(t_star,2)*x3 - pow(t,2)*pow(t_star,2)*y3)/pow(t_star,3);
-		temp_point.y = (2*pow(t,3)*x2 + pow(t_star,3)*x2 - 2*pow(t,3)*y2 - 3*pow(t,2)*t_star*x2 + t*pow(t_star,3)*x4 + pow(t,3)*t_star*x4 + 3*pow(t,2)*t_star*y2 + pow(t,3)*t_star*y4 - 2*pow(t,2)*pow(t_star,2)*x4 - pow(t,2)*pow(t_star,2)*y4)/pow(t_star,3);
-		if(!is_valid_Node(&temp_point)){
+		temp_node.x = (2*pow(t,3)*x1 + pow(t_star,3)*x1 - 2*pow(t,3)*y1 - 3*pow(t,2)*t_star*x1 + t*pow(t_star,3)*x3 + pow(t,3)*t_star*x3 + 3*pow(t,2)*t_star*y1 + pow(t,3)*t_star*y3 - 2*pow(t,2)*pow(t_star,2)*x3 - pow(t,2)*pow(t_star,2)*y3)/pow(t_star,3);
+		temp_node.y = (2*pow(t,3)*x2 + pow(t_star,3)*x2 - 2*pow(t,3)*y2 - 3*pow(t,2)*t_star*x2 + t*pow(t_star,3)*x4 + pow(t,3)*t_star*x4 + 3*pow(t,2)*t_star*y2 + pow(t,3)*t_star*y4 - 2*pow(t,2)*pow(t_star,2)*x4 - pow(t,2)*pow(t_star,2)*y4)/pow(t_star,3);
+		temp_node.time = Start->time + t;
+		if(!is_valid_Node(&temp_node)){
 			return false;
 		}
 		t += t_delta;
