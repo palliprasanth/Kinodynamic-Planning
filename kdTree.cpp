@@ -11,6 +11,7 @@ void printNode(kdTreeNode* n){
         mexPrintf("Node is NULL \n"); 
     else{
         mexPrintf("X=%f , Y=%f , leftNode=%x, rightNode=%x \n", (n->point)[0], (n->point)[1], n->left, n->right); 
+        mexPrintf("kdTree node data x=%f, y=%f, vx=%f,vy=%f \n", (n->data)->x, (n->data)->y, (n->data)->vx, (n->data)->vy);
     }
     return; 
 }
@@ -25,8 +26,8 @@ kdTreeNode* createKDTreeNode(Node* newNode){
   (tmp->point)[1] = newNode->y; 
   tmp->left = NULL;
   tmp->right = NULL;
-  //mexPrintf("printing new kdTree node to be inserted \n"); 
-  ///printNode(tmp); 
+  mexPrintf("printing new kdTree node inserted \n"); 
+  printNode(tmp); 
   return tmp; 
 }
 
@@ -38,7 +39,7 @@ kdTreeNode* insertKDTree(kdTreeNode* r,  Node* newNode, unsigned int depth){
   
   
   if(r==NULL){
-    mexPrintf("NULL \n"); 
+    //mexPrintf("NULL \n"); 
     r = createKDTreeNode(newNode);
     return r;
   }
@@ -73,8 +74,12 @@ void nearestNeighbours( kdTreeNode* r, Node* testPt, int currDim, std::list<Node
   float dist = getEuclidDist(r, testPt);
   float dimDist = r->point[currDim] - newPoint[currDim];
 
-  if(dist < MAX_RAD)
+  if(dist < MAX_RAD){
+    //mexPrintf("printing node to be inserted into the nearest  neighbours list \n");
+    //mexPrintf("dist=%f \n", dist);
+    //printNode(r);
     (*neighbours).push_back(r->data); 
+  }
 
   currDim = (currDim+1) % DIM;
 

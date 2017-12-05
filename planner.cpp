@@ -62,11 +62,17 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	// Goal.vx = 0;
 	// Goal.vy = 0;
 
-	Goal.x = 45;
-	Goal.y = 45;
+	Goal.x = 20;
+	Goal.y = 31;
 	Goal.vx = 0;
 	Goal.vy = 0;
 	Goal.time = 0;
+
+	// Goal.x = 45;
+	// Goal.y = 45;
+	// Goal.vx = 0;
+	// Goal.vy = 0;
+	// Goal.time = 0;
 
  //    Goal.x = 42;
 	// Goal.y = 39;
@@ -94,14 +100,18 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	
 	// RRT_Star.print_node(RRT_Star.get_Goal());
 
-	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-	while(duration < planning_cycle){
-		RRT_Star.expand_tree(uni_distribution);
 		duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+	mexPrintf("First Path Found after %f sec\n",duration);
+	while(Goal_Node->cost > 27.0){
+		RRT_Star.expand_tree(uni_distribution);
+		//duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	}
 	
 	RRT_Star.print_node(RRT_Star.get_Goal());
 
+	duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+	mexPrintf("Best Cost Path Found after %f sec\n",duration);
 	// duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	// mexPrintf("Time: %f\n",duration );
 

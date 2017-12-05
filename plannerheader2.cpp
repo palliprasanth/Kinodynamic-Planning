@@ -86,7 +86,7 @@ void Tree::generate_sample_Node(std::uniform_real_distribution<float> uni_distri
 		Sample_Node.y = Y_MIN + uni_distribution(generator)*(Y_MAX-Y_MIN);
 		Sample_Node.vx = VX_MIN + uni_distribution(generator)*(VX_MAX-VX_MIN);
 		Sample_Node.vy = VY_MIN + uni_distribution(generator)*(VY_MAX-VY_MIN);
-
+		Sample_Node.parent=NULL;
 		valid_sample = is_valid_Node(&Sample_Node);
 	}
 	//mexPrintf("Sample Node Generated\n");
@@ -119,9 +119,9 @@ void Tree::expand_tree(std::uniform_real_distribution<float> uni_distribution, k
 	// First Rewiring Starts
 	//compute_euclidean_neighbors(&Sample_Node);
     list<Node*> kdTreeNeighbours; 
+    
     nearestNeighbours(*kdTrRoot, &Sample_Node, 0, &kdTreeNeighbours);
     
-
 	//mexPrintf("Number of neighbors: %d\n", Euclidean_Neighbors.size());
 	for(list<Node*>::iterator it = kdTreeNeighbours.begin();it != kdTreeNeighbours.end(); it++){
 		root_check = optimal_arrival_time(*it, &Sample_Node, &opt_time);

@@ -37,6 +37,8 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	float robotposeTheta, float goalposeX, float goalposeY, float*** plan, int* planlength)
 {
 
+	*plan = NULL;
+	*planlength = 0;
 	std::uniform_real_distribution<float> uni_distribution(0.0,1.0);
 
 	std::clock_t start;
@@ -51,6 +53,7 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	Start.y = 1;
 	Start.vx = 0;
 	Start.vy = 0;
+	Start.parent=NULL;
 
 	// Goal.x = 25;
 	// Goal.y = 10;
@@ -73,11 +76,11 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	// Goal.vy = 0;
 
 	list<Node*> Path;
-    
-    kdTreeNode*  kdTrRoot = NULL; 
-    kdTrRoot = insertKDTree(kdTrRoot, &Start, 0); 
-    kdTrRoot = insertKDTree(kdTrRoot, &Goal, 0); 
 
+	kdTreeNode*  kdTrRoot = NULL; 
+	kdTrRoot = insertKDTree(kdTrRoot, &Start, 0); 
+	//kdTrRoot = insertKDTree(kdTrRoot, &Goal, 0); 
+	
 	Tree RRT_Star(&Start, &Goal, map, x_size, y_size);
 	Node* Goal_Node = RRT_Star.get_Goal();
 
@@ -105,16 +108,20 @@ static void planner(double*	map, int x_size, int y_size, float robotposeX, float
 	
 	RRT_Star.print_node(RRT_Star.get_Goal());
 
+
 	// duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	// mexPrintf("Time: %f\n",duration );
 
 	Node* Parent_Node = Goal_Node->parent;
 	Path.push_front(Goal_Node);
+
+	
 	while(Parent_Node != NULL){
 		Path.push_front(Parent_Node);
 		Parent_Node = Parent_Node->parent;
 	}
 
+	return;
 	int path_size = Path.size();
 
 	mexPrintf("Tree Size is %d\n",RRT_Star.get_tree_size());
